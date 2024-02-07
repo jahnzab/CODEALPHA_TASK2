@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: aquamarine;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.input-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+.input-section label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.input-section input[type="number"],
+.input-section input[type="date"] {
+    padding: 8px;
+    margin-right: 10px;
+}
+
+.input-section button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.expenses-list {
+    margin: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    color: blue;
+    background-color: white;
+    border: 2px solid #ddd;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 15px;
+    text-align: left;
+}
+
+th {
+    background-color: #4CAF50;
+    color: white;
+}
+
+tfoot td {
+    font-weight: bold;
+}
+
+.delete-btn {
+    padding: 10px 20px;
+    background-color: #f44336;
+    color: white; /* Adjusted text color to maintain consistency */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+@media only screen and (max-width: 600px) {
+    body {
+        font-size: 13px;
+    }
+
+    .input-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .input-section label,
+    .input-section input,
+    .input-section button {
+        margin: 5px 0;
+    }
+
+    table {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 10px;
+    }
+
+    .delete-btn,
+    .edit-btn {
+        padding: 8px 15px;
+    }
+}
+
+   </style>
+    <title>Expense Tracker App</title>
+</head>
+<body>
+    <h1 style="border: 2px;">Expense Tracker App</h1>
+    <div class="input-section" style="background-color:  #4c7dde;">
+        <label for="category-select">Category:</label>
+        <select id="category-select">
+            <option value="Food & Beverage">Food & Beverage</option>
+            <option value="Rent">Rent</option>
+            <option value="Transport">Transport</option>
+            <option value="Relaxing">Relaxing</option>
+        </select>
+        <label for="amount-input">Amount:</label>
+        <input type="number" id="amount-input">
+        <label for="date-input">Date:</label>
+        <input type="date" id="date-input">
+        <button id="add-btn">Add</button>
+    </div>
+    <div class="expenses-list">
+        <h1>Expenses List</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Delete</th>
+                    <th>Edit</th>
+                </tr>
+            </thead>
+            <tbody id="expnese-table-body">
+
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Total:</td>
+                    <td id="total-amount"></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <script >
+        // JavaScript
+let expenses = [];
+let totalAmount = 0;
+
+const categorySelect = document.getElementById('category-select');
+const amountInput = document.getElementById('amount-input');
+const dateInput = document.getElementById('date-input');
+const addBtn = document.getElementById('add-btn');
+const expensesTableBody = document.getElementById('expnese-table-body');
+const totalAmountCell = document.getElementById('total-amount');
+
+addBtn.addEventListener('click', function() {
+    const category = categorySelect.value;
+    const amount = Number(amountInput.value);
+    const date = dateInput.value;
+
+    if (category === '') {
+        alert('Please select a category');
+        return;
+    }
+    if (isNaN(amount) || amount <= 0) {
+        alert('Please enter a valid amount');
+        return;
+    }
+    if (date === '') {
+        alert('Please select a date');
+        return;
+    }
+
+    const expense = { category, amount, date };
+    expenses.push(expense);
+
+    totalAmount += amount;
+    totalAmountCell.textContent = totalAmount;
+
+    const newRow = expensesTableBody.insertRow();
+
+    const categoryCell = newRow.insertCell();
+    const amountCell = newRow.insertCell();
+    const dateCell = newRow.insertCell();
+    const deleteCell = newRow.insertCell();
+    const deleteBtn = document.createElement('button');
+
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.classList.add('delete-btn');
+    deleteBtn.addEventListener('click', function() {
+        expenses.splice(expenses.indexOf(expense), 1);
+
+        totalAmount -= expense.amount;
+        totalAmountCell.textContent = totalAmount;
+
+        expensesTableBody.removeChild(newRow);
+    });
+
+    const editCell = newRow.insertCell();
+    const editBtn = document.createElement('button');
+    editBtn.style.color='blue'
+    editBtn.style.backgroundColor = 'yellow';
+    editBtn.style.borderRadius = '4px';
+    editBtn.style.padding = '10px 30px';
+    editBtn.textContent = 'Edit';
+    editBtn.classList.add('edit-btn');
+    editBtn.addEventListener('click', function() {
+        editExpense(expense, newRow);
+    });
+
+    categoryCell.textContent = expense.category;
+    amountCell.textContent = expense.amount;
+    dateCell.textContent = expense.date;
+    deleteCell.appendChild(deleteBtn);
+    editCell.appendChild(editBtn);
+});
+
+function editExpense(expense, row) {
+    const newCategory = prompt('Enter new category:', expense.category);
+    const newAmount = parseFloat(prompt('Enter new amount:', expense.amount));
+    const newDate = prompt('Enter new date:', expense.date);
+
+    if (newCategory && !isNaN(newAmount) && newDate) {
+        // Update the expense object
+        expense.category = newCategory;
+        expense.amount = newAmount;
+        expense.date = newDate;
+
+        // Update the row in the table
+        updateTableRow(row, expense);
+
+        // Recalculate total amount
+        calculateTotalAmount();
+    } else {
+        alert('Invalid input. Please try again.');
+    }
+}
+
+function updateTableRow(row, expense) {
+    const [categoryCell, amountCell, dateCell] = row.cells;
+
+    categoryCell.textContent = expense.category;
+    amountCell.textContent = expense.amount;
+    dateCell.textContent = expense.date;
+}
+
+function calculateTotalAmount() {
+    totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    totalAmountCell.textContent = totalAmount;
+}
+
+    </script>
+</body>
+</html>
